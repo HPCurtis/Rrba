@@ -15,11 +15,11 @@ mod <- cmdstan_model(MOD_FILE_PATH)
 
 # convert to subject to integer.
 df$int_subj <- as.integer(factor(df$subject))
-print(length(unique(df$subject)))
+X <- model.matrix(y ~ x, data= df)
 
 
 # Names correspond to the data block in the Stan program
-data_list <- list(N = nrow(df), y = df$y, x = df$x,
+data_list <- list(N = nrow(df), y = df$y, X = X, K = ncol(X), Kc = ncol(X) -1,
                   J = 2, N_subj = length(unique(df$subject)),
                  subj = df$int_subj)
 

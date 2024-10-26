@@ -1,14 +1,15 @@
+# Import analysis packages 
 library("brms")
 library("tidyverse")
 options(mc.cores = parallel::detectCores())
 
 file_path = "../data/data.csv"
 df <- read.csv(file_path)
-print(head(df))
 
 # Define your model formula
 mod_formula <- bf(y ~ x + (1 | subject) + (x | ROI))
 
+# Fit using brms defaults.
 fit <- brm(
   formula = mod_formula,      
   data = df,                  
@@ -28,6 +29,7 @@ fit_parrallel <- brm(
   threads = threading(2)      
 )
 
+# Gnerate the stan code and data for understanding.
 sc <- stancode(fit)
 sc_parrallel <- stancode(fit_parrallel)
 sd <- standata(fit)

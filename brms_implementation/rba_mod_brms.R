@@ -30,11 +30,17 @@ fit_parrallel <- brm(
 
 sc <- stancode(fit)
 sc_parrallel <- stancode(fit_parrallel)
+sd <- standata(fit)
 
 # Define the file path for where to save brms outputted stan code.
 stan_file_path <- "brms_model.stan"  
 stan_file_path_parrallel <- "brms_model_parrallel.stan" 
+standata_file_path <- "standata.rds"
 
 # Write the Stan code to a .stan file
 writeLines(sc, con = stan_file_path)
 writeLines(sc_parrallel, con = stan_file_path_parrallel)
+
+# Create file for standata from 
+sd_df <- as.data.frame(sd)  # Convert to data frame if applicable
+saveRDS(sd, standata_file_path)

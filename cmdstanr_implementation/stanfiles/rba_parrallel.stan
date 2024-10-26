@@ -1,18 +1,30 @@
 functions {
-  // Function to compute log likelihood for a subset of data
-  real log_likelihood(int start, int end,
-                      vector y, matrix X, 
-                      vector alpha, vector beta,
-                      vector u, matrix u2,
-                      real sigma) {
-    real ll = 0;
-    
-    for (n in start:end) {
-      vector[Kc] mu; 
-      mu = alpha + u[subj[n]] + u2[ROI[n], 1] + X[n, 2] * u2[ROI[n], 2];
-      ll += normal_id_glm_lpdf(y[n] | mu, beta, sigma);
+  /* integer sequence of values
+   * Args:
+   *   start: starting integer
+   *   end: ending integer
+   * Returns:
+   *   an integer sequence from start to end
+   */
+  array[] int sequence(int start, int end) {
+    array[end - start + 1] int seq;
+    for (n in 1:num_elements(seq)) {
+      seq[n] = n + start - 1;
     }
-    return ll;
+    return seq;
+  }
+  // compute partial sums of the log-likelihood
+  real partial_log_lik_lpmf(array[] int seq, int start, 
+    int end, data vector y, data matrix X, data matrix Xc, vector beta, real alpha,
+    real sigma, data array[] int subj, data array[] int ROI,
+    vector u, matrix u2) {
+
+    real ptarget = 0;
+    int N = end - start + 1;
+    // initialize linear predictor term
+    vector[N] mu = alpha + u[subj[start:end]] + u2[ROI[start:end], 1] + X[,2][start:end] .* u2[ROI[start:end], 2];
+    ptarget += normal_id_glm_lpdf(y[start:end] | Xc[start:end], mu, beta, sigma);
+    return ptarget;
   }
 }
 
@@ -23,7 +35,7 @@ data {
   int<lower=1> N_ROI;                        // Number of Regions of Interest (ROIs)
   int<lower=1> K;                            // Number of population-level predictors
   int<lower=1> Kc;                           // Number of centered population-level predictors
-
+  int grainsize;
   vector[N] y;                               // Response variable
   matrix[N, K] X;                            // Design matrix for predictors
   array[N] int<lower=1, upper=N_subj> subj; // Subject IDs for each observation
@@ -33,6 +45,7 @@ data {
 transformed data {
   matrix[N, Kc] Xc;                          // Centered version of X without an intercept
   vector[Kc] means_X;                        // Column means of X before centering
+  array[N] int seq = sequence(1, N);
   for (i in 2:K) {
     means_X[i - 1] = mean(X[, i]);
     Xc[, i - 1] = X[, i] - means_X[i - 1];
@@ -67,13 +80,8 @@ model {
   vector[N_subj] u;
   matrix[N_ROI, J] u2;
   u = z_u * tau_u;                                                // Centered random effects for subjects
-  u2 = (diag_pre_multiply(tau_u2, L_u) * z_u2)';                // Centered random effects for ROIs
+  u2 = transpose((diag_pre_multiply(tau_u2, L_u) * z_u2));                // Centered random effects for ROIs
 
-  // Compute the log likelihood using reduce_sum
-  target += reduce_sum(log_likelihood, 
-                        to_array_1d(y), 
-                        to_array_1d(X), 
-                        alpha, beta, u, u2, sigma,
-                        1, // This is the chunk size, adjust based on memory limits
-                        1, N); // Start and end indices for the likelihood
+  target += reduce_sum(partial_log_lik_lpmf,seq, grainsize, y, X, Xc, 
+                       beta, alpha, sigma, subj, ROI, u, u2);
 }

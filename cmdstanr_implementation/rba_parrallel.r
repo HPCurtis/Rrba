@@ -1,5 +1,6 @@
 library("cmdstanr")
 library("tidyverse")
+library("posterior")
 
 options(mc.cores = parallel::detectCores())  # Use multiple cores
 
@@ -43,3 +44,7 @@ posterior_df <- fit$draws(format = "df")
 
 # Alternatively, to store them in a CSV file
 write.csv(posterior_df, "posterior_parrallel_draws.csv", row.names = FALSE)
+
+# Output summary to check for convergence.
+# rhat is fine and ess_bulk & tail > 400.
+print(fit$summary(variables = c("alpha", "beta")))

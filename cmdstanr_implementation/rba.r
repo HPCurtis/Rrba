@@ -9,7 +9,7 @@ FILE_PATH <- "../data/data.csv"
 MOD_FILE_PATH <- "stanfiles/rba.stan"
 
 # Read in the fMRI Region BOLD data.
-df <- read.csv(FILE_PATH)
+df <- read.csv(FILE_PATH)df <- read.csv(FILE_PATH)
 
 # Compile stan model
 mod <- cmdstan_model(MOD_FILE_PATH)
@@ -32,3 +32,9 @@ fit <- mod$sample(
   chains = 4,
   parallel_chains = 4
 )
+
+# Extract posterior draws
+posterior_df <- fit$draws(format = "df")
+
+# Alternatively, to store them in a CSV file
+write.csv(posterior_df, "posterior_parrallel_draws.csv", row.names = FALSE)

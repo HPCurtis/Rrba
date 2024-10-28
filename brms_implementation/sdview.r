@@ -1,2 +1,2 @@
 sd <- readRDS("standataparrallel.rds")
-print(sd$grainsize)
+print(sd$N_1)

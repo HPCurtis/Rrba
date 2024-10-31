@@ -62,7 +62,13 @@ parameters {
   cholesky_factor_corr[J] L_u;                // Cholesky factor of the correlation matrix for u2
   real<lower = 0> sigma;                      // Residual standard deviation
 }
-
+transformed parameters{
+    // Compute random effects
+  vector[N_subj] u;
+  matrix[N_ROI, J] u2;
+  u = z_u * tau_u;                                                // Centered random effects for subjects
+  u2 = transpose((diag_pre_multiply(tau_u2, L_u) * z_u2));        // Centered random effects for ROIs
+}
 model {
   target += student_t_lpdf(alpha | 3, 0.1, 2.5);                // Prior for alpha
   target += normal_lpdf(beta | 0, 10);                           // Prior for beta
@@ -76,12 +82,20 @@ model {
   target += std_normal_lpdf(to_vector(z_u2));                    // Prior for group-level effects of ROIs
   target += std_normal_lpdf(z_u);                                 // Prior for group-level effects of subjects
 
-  // Compute random effects
-  vector[N_subj] u;
-  matrix[N_ROI, J] u2;
-  u = z_u * tau_u;                                                // Centered random effects for subjects
-  u2 = transpose((diag_pre_multiply(tau_u2, L_u) * z_u2));                // Centered random effects for ROIs
-
   target += reduce_sum(partial_log_lik_lpmf,seq, grainsize, y, X, Xc, 
                        beta, alpha, sigma, subj, ROI, u, u2);
 }
+generated quantities {
+  // actual population-level intercept
+  real b_Intercept = alpha - dot_product(means_X, beta);
+  // compute group-level correlations
+  corr_matrix[J] Cor_1 = multiply_lower_tri_self_transpose(L_u);
+  vector<lower=-1,upper=1>[1] cor_1;
+  // extract upper diagonal of correlation matrix
+  for (k in 1:J) {
+    for (j in 1:(k - 1)) {
+      cor_1[choose(k - 1, 2) + j] = Cor_1[j, k];
+    }
+  }
+}
+

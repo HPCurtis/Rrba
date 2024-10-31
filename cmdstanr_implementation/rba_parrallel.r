@@ -13,8 +13,8 @@ MOD_FILE_PATH <- "stanfiles/rba_parrallel.stan"
 df <- read.csv(FILE_PATH)
 print(nrow(df))
 
-# Compile stan model
-mod <- cmdstan_model(MOD_FILE_PATH, cpp_options = list(stan_threads = TRUE))
+# Compile Stan model
+mod <- cmdstan_model(MOD_FILE_PATH, cpp_options = list(stan_threads = TRUE), compile = TRUE)
 
 # convert to subject and ROI to integer.
 df$int_subj <- as.integer(factor(df$subject))

@@ -53,3 +53,17 @@ model {
 
   target += normal_id_glm_lpdf(y | Xc, mu, beta, sigma);
 }
+generated quantities {
+  // actual population-level intercept
+  real b_Intercept = alpha - dot_product(means_X, beta);
+  
+  // compute group-level correlations
+  corr_matrix[J] Cor_1 = multiply_lower_tri_self_transpose(L_u);
+  vector<lower=-1,upper=1>[1] cor_1;
+   extract upper diagonal of correlation matrix
+  for (k in 1:J) {
+    for (j in 1:(k - 1)) {
+      cor_1[choose(k - 1, 2) + j] = Cor_1[j, k];
+    }
+  }
+}

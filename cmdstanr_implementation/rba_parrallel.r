@@ -1,6 +1,7 @@
 library("cmdstanr")
 library("tidyverse")
 library("posterior")
+library("brms")
 
 options(mc.cores = parallel::detectCores())  # Use multiple cores
 
@@ -11,7 +12,6 @@ MOD_FILE_PATH <- "stanfiles/rba_parrallel.stan"
 
 # Read in the fMRI Region BOLD data.
 df <- read.csv(FILE_PATH)
-print(nrow(df))
 
 # Compile Stan model
 mod <- cmdstan_model(MOD_FILE_PATH, cpp_options = list(stan_threads = TRUE), compile = TRUE)
@@ -39,12 +39,18 @@ fit <- mod$sample(
   threads_per_chain = 2
 )
 
+
+brmso <- brm(y ~ x + (1 | subject) + (x | ROI), data = df, empty = TRUE)
+brmso$fit <- rstan::read_stan_csv(fit$output_files())
+brmso <- rename_pars(fit)
+summary(brmso)
+
 # Extract posterior draws
-posterior_df <- fit$draws(format = "df")
+#posterior_df <- fit$draws(format = "df")
 
 # Alternatively, to store them in a CSV file
-write.csv(posterior_df, "posterior_parrallel_draws.csv", row.names = FALSE)
+#write.csv(posterior_df, "posterior_parrallel_draws.csv", row.names = FALSE)
 
 # Output summary to check for convergence.
 # rhat is fine and ess_bulk & tail > 400.
-print(fit$summary(variables = c("alpha", "beta")))
+#print(fit$summary(variables = c("alpha", "beta")))

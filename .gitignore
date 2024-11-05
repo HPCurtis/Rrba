@@ -5,3 +5,8 @@ voxel_sim/posterior_parrallel_draws.csv
 voxel_sim/posterior_parrallel_draws_uncor.csv
 brms_implementation/voxelsim_mod_brms_parrallel.R
 brms_implementation/voxelsim_mod_brms.R
+cmdstanr_implementation/posterior_draws.csv
+voxel_sim/posterior_draws_uncor.csv
+cmdstanr_implementation/stanfiles/rba_uncor
+cmdstanr_implementation/stanfiles/rba
+.gitignore

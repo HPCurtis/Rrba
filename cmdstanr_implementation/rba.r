@@ -5,7 +5,7 @@ options(mc.cores = parallel::detectCores())  # Use multiple cores
 
 # Specify file path. 
 # TODO upload data to github as rba.csv
-FILE_PATH <- "../data/data.csv"
+FILE_PATH <- "https://raw.githubusercontent.com/HPCurtis/Datasets/refs/heads/main/rba.csv"
 MOD_FILE_PATH <- "stanfiles/rba.stan"
 
 # Read in the fMRI Region BOLD data.
@@ -28,18 +28,14 @@ data_list <- list(N = nrow(df), y = df$y, X = X, K = ncol(X), Kc = ncol(X) -1,
 # Fit model.
 fit <- mod$sample(
   data = data_list,
-  seed = 123,
-  chains = 4,
-  parallel_chains = 4
+  chains = 4
 )
+
+fit$save_object(file = "RBA_posterior_draws.RDS")
 
 # Extract posterior draws
 posterior_df <- fit$draws(format = "df")
 
-# Alternatively, to store them in a CSV file
-write.csv(posterior_df, "posterior_draws.csv", row.names = FALSE)
-
-
 # Output summary to check for convergence.
 # rhat is fine and ess_bulk & tail > 400.
-print(fit$summary(variables = c("alpha", "beta")))
+print(fit$summary(variables = c("alpha", "beta", "sigma", "tau_u", "tau_u2")))

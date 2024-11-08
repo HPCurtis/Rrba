@@ -9,6 +9,7 @@ options(mc.cores = parallel::detectCores())  # Use multiple cores
 # TODO upload data to github as rba.csv
 FILE_PATH <- "../data/data.csv"
 MOD_FILE_PATH <- "stanfiles/rba_parrallel.stan"
+G <- 4
 
 # Read in the fMRI Region BOLD data.
 df <- read.csv(FILE_PATH)
@@ -23,34 +24,28 @@ df$int_roi <- as.integer(factor(df$ROI))
 X <- model.matrix(y ~ x, data= df)
 
 # Names correspond to the data block in the Stan program
-data_list <- list(N = nrow(df), y = df$y, X = X, K = ncol(X), Kc = ncol(X) -1,
+data_list <- list(N = nrow(df), y = df$y, X = X, K = ncol(X), Kc = ncol(X)-1,
                   J = 2, N_subj = length(unique(df$subject)),
                   N_ROI=length(unique(df$ROI)), subj = df$int_subj, ROI=df$int_roi, 
                   # brms default is N/4
-                  grainsize=round(nrow(df)/4))
+                  grainsize=round(nrow(df)/G))
 
 # Fit model.
 fit <- mod$sample(
   data = data_list,
-  seed = 123,
   iter_warmup = 1000,                  
-  iter_sampling = 1000, 
+  iter_sampling = 1000,
+  chains=4, 
   parallel_chains = 4,
-  threads_per_chain = 2
+  threads_per_chain = 2,
+  adapt_delta=.9
 )
 
-
-brmso <- brm(y ~ x + (1 | subject) + (x | ROI), data = df, empty = TRUE)
-brmso$fit <- rstan::read_stan_csv(fit$output_files())
-brmso <- rename_pars(fit)
-summary(brmso)
-
 # Extract posterior draws
-#posterior_df <- fit$draws(format = "df")
+posterior_df <- fit$draws(format = "df")
 
-# Alternatively, to store them in a CSV file
-#write.csv(posterior_df, "posterior_parrallel_draws.csv", row.names = FALSE)
+fit$save_object(file = "RBA_posterior_parrallel_draws.RDS")
 
 # Output summary to check for convergence.
 # rhat is fine and ess_bulk & tail > 400.
-#print(fit$summary(variables = c("alpha", "beta")))
+print(fit$summary(variables = c("alpha", "beta", "b_Intercept", "sigma", "tau_u", "tau_u2")))

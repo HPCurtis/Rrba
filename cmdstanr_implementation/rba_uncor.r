@@ -29,17 +29,13 @@ data_list <- list(N = nrow(df), y = df$y, X = X, K = ncol(X), Kc = ncol(X) -1,
 # Fit model.
 fit <- mod$sample(
   data = data_list,
-  seed = 123,
-  chains = 4,
-  parallel_chains = 4
+  chains = 4
 )
 
 # Extract posterior draws
 posterior_df <- fit$draws(format = "df")
 
-# Alternatively, to store them in a CSV file
-write.csv(posterior_df, "posterior_draws.csv", row.names = FALSE)
-
+fit$save_object(file = "RBA_posterior_uncor_draws.RDS")
 
 # Output summary to check for convergence.
 # rhat is fine and ess_bulk & tail > 400.

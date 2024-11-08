@@ -29,29 +29,30 @@ parameters {
   cholesky_factor_corr[J] L_u;
   real<lower = 0> sigma;
 }
-model {
-  target += student_t_lpdf(alpha | 3, 0.1, 2.5);
-  target += normal_lpdf(beta | 0, 10);
-  target += student_t_lpdf(sigma | 3, 0, 2.5) 
-  - student_t_lccdf(0 | 3, 0, 2.5);
-  
-  target += student_t_lpdf(tau_u | 3, 0, 2.5)
-  - student_t_lccdf(0 | 3, 0, 2.5);
-  target += student_t_lpdf(tau_u2 | 3, 0, 2.5)
-  - student_t_lccdf(0 | 3, 0, 2.5);
-  target += lkj_corr_cholesky_lpdf(L_u | 1);
-  target += std_normal_lpdf(to_vector(z_u2));
-  target += std_normal_lpdf(z_u);
-
+transformed parameters{
+    // Compute random effects
   vector[N_subj] u;
   matrix[N_ROI, J] u2;
-  u = z_u * tau_u;
-  u2 = transpose((diag_pre_multiply(tau_u2, L_u) * z_u2));
+  u = z_u * tau_u;                                        
+  u2 = transpose((diag_pre_multiply(tau_u2, L_u) * z_u2));        
+}
+model {
 
+  alpha ~ student_t(3, 0.1, 2.5);
+  beta ~ normal(0, 1);
+  sigma ~ student_t(3, 0, 2.5);
+  
+  tau_u ~ student_t(3, 0, 2.5);
+  tau_u2 ~ student_t(3, 0, 2.5);
+  
+  L_u ~ lkj_corr_cholesky(1);
+  to_vector(z_u2) ~ std_normal();
+  z_u ~ std_normal();
+  
   // Generate model mu.
   vector[N] mu = alpha + u[subj] + u2[ROI, 1] + X[,2] .* u2[ROI, 2];
 
-  target += normal_id_glm_lpdf(y | Xc, mu, beta, sigma);
+  y ~ normal_id_glm(Xc, mu, beta, sigma);
 }
 generated quantities {
   // actual population-level intercept
@@ -60,7 +61,7 @@ generated quantities {
   // compute group-level correlations
   corr_matrix[J] Cor_1 = multiply_lower_tri_self_transpose(L_u);
   vector<lower=-1,upper=1>[1] cor_1;
-   extract upper diagonal of correlation matrix
+  // extract upper diagonal of correlation matrix
   for (k in 1:J) {
     for (j in 1:(k - 1)) {
       cor_1[choose(k - 1, 2) + j] = Cor_1[j, k];

@@ -70,17 +70,16 @@ transformed parameters{
   u2 = transpose((diag_pre_multiply(tau_u2, L_u) * z_u2));        // Centered random effects for ROIs
 }
 model {
-  target += student_t_lpdf(alpha | 3, 0.1, 2.5);                // Prior for alpha
-  target += normal_lpdf(beta | 0, 10);                           // Prior for beta
-  target += student_t_lpdf(sigma | 3, 0, 2.5) 
-            - student_t_lccdf(0 | 3, 0, 2.5);                    // Prior for sigma
-  target += student_t_lpdf(tau_u | 3, 0, 2.5) 
-            - student_t_lccdf(0 | 3, 0, 2.5);                    // Prior for tau_u
-  target += student_t_lpdf(tau_u2 | 3, 0, 2.5) 
-            - student_t_lccdf(0 | 3, 0, 2.5);                    // Prior for tau_u2
-  target += lkj_corr_cholesky_lpdf(L_u | 1);                     // Prior for correlation matrix
-  target += std_normal_lpdf(to_vector(z_u2));                    // Prior for group-level effects of ROIs
-  target += std_normal_lpdf(z_u);                                 // Prior for group-level effects of subjects
+  alpha ~ student_t(3, 0.1, 2.5);
+  beta ~ normal(0, 1);
+  sigma ~ student_t(3, 0, 2.5);
+  
+  tau_u ~ student_t(3, 0, 2.5);
+  tau_u2 ~ student_t(3, 0, 2.5);
+  
+  L_u ~ lkj_corr_cholesky(1);
+  to_vector(z_u2) ~ std_normal();
+  z_u ~ std_normal();                               // Prior for group-level effects of subjects
 
   target += reduce_sum(partial_log_lik_lpmf,seq, grainsize, y, X, Xc, 
                        beta, alpha, sigma, subj, ROI, u, u2);
@@ -98,4 +97,3 @@ generated quantities {
     }
   }
 }
-

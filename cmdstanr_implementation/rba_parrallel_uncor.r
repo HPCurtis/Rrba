@@ -37,14 +37,14 @@ fit <- mod$sample(
   iter_sampling = 1000,
   chains=4, 
   parallel_chains = 4,
-  threads_per_chain = 2
+  threads_per_chain = 2,
+  adapt_delta=.8
 )
 
 # Extract posterior draws
-#posterior_df <- fit$draws(format = "df")
+posterior_df <- fit$draws(format = "df")
 
-# Alternatively, to store them in a CSV file
-#write.csv(posterior_df, "posterior_parrallel_draws.csv", row.names = FALSE)
+fit$save_object(file = "RBA_posterior_parrallel_uncor_draws.RDS")
 
 # Output summary to check for convergence.
 # rhat is fine and ess_bulk & tail > 400.

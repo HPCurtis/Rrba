@@ -7,7 +7,7 @@ options(mc.cores = parallel::detectCores())  # Use multiple cores
 
 # Specify file path. 
 # TODO upload data to github as rba.csv
-FILE_PATH <- "../data/data.csv"
+FILE_PATH <- "https://raw.githubusercontent.com/HPCurtis/Datasets/refs/heads/main/rba.csv"
 MOD_FILE_PATH <- "stanfiles/rba_parrallel.stan"
 G <- 4
 
@@ -38,7 +38,7 @@ fit <- mod$sample(
   chains=4, 
   parallel_chains = 4,
   threads_per_chain = 2,
-  adapt_delta=.9
+  adapt_delta=.85
 )
 
 # Extract posterior draws
@@ -48,4 +48,6 @@ fit$save_object(file = "RBA_posterior_parrallel_draws.RDS")
 
 # Output summary to check for convergence.
 # rhat is fine and ess_bulk & tail > 400.
-print(fit$summary(variables = c("alpha", "beta", "b_Intercept", "sigma", "tau_u", "tau_u2")))
+print(fit$summary(variables = c("alpha", "beta", "b_Intercept",
+                                "sigma", "tau_u", "tau_u2",
+                                "cor_1")))

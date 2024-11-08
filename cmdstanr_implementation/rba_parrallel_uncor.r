@@ -7,7 +7,7 @@ options(mc.cores = parallel::detectCores())  # Use multiple cores
 
 # Specify file path. 
 # TODO upload data to github as rba.csv
-FILE_PATH <- "../data/data.csv"
+FILE_PATH <- "https://raw.githubusercontent.com/HPCurtis/Datasets/refs/heads/main/rba.csv"
 MOD_FILE_PATH <- "stanfiles/rba_parrallel_uncor.stan"
 G <- 4
 

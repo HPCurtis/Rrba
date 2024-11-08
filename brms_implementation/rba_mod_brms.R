@@ -1,9 +1,11 @@
-# Import analysis packages 
+# Load in analysis packages 
 library("brms")
+library("rstan")
 library("tidyverse")
 library("cmdstanr")
 
 options(mc.cores = parallel::detectCores())
+#rstan_options(auto_write = TRUE)
 
 MOD_FILE_PATH = "brms_model_opt.stan"
 FILE_PATH = "../data/data.csv"
@@ -32,22 +34,24 @@ writeLines(sc_parrallel, con = stan_file_path_parrallel)
 saveRDS(sd, standata_file_path)
 saveRDS(sd_p, standata_file_path_parralel)
 
-# Fit using brms defaults.
+# Fit using AFNI defaults brms models (see, https://github.com/afni/afni/blob/master/src/R_scripts/RBA.R).
 fit <- brm(
   formula = mod_formula,      
-  data = df,                  
+  data = df,
+  init=0,
+  control = list(adapt_delta = 0.99, max_treedepth = 15),                
   family = gaussian(),        
   backend = "cmdstanr",       
-  chains = 4,                 
-  cores = 4)
+  chains = 4)
 
 # Use brms multiple threading for speed ups.
 fit_parrallel <- brm(
   formula = mod_formula,      
-  data = df,                  
+  data = df,
+  init=0,
+  control = list(adapt_delta = 0.99, max_treedepth = 15),                  
   family = gaussian(),        
   backend = "cmdstanr",       
-  chains = 4,                 
-  cores = 4,
-  threads = threading(2)      
-)
+  chains = 4,  
+  cores = 4,               
+  threads = threading(2))

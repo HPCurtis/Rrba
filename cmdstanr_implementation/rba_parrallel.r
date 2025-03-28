@@ -38,7 +38,7 @@ fit <- mod$sample(
   parallel_chains = 4,
   threads_per_chain = 2,
   adapt_delta=.99, 
-  max_depth=15
+  max_treedepth=15
 )
 
 # Extract posterior draws

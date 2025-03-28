@@ -13,7 +13,7 @@ MOD_FILE_PATH <- "stanfiles/rba_uncor.stan"
 df <- read.csv(FILE_PATH)
 
 # Compile stan model
-mod <- cmdstan_model(MOD_FILE_PATH)
+mod <- cmdstan_model(MOD_FILE_PATH, cpp_options = list(stan_threads = TRUE), compile = TRUE)
 
 # convert to subject and ROI to integer.
 df$int_subj <- as.integer(factor(df$subject))
@@ -35,7 +35,7 @@ fit <- mod$sample(
   parallel_chains = 4,
   threads_per_chain = 2,
   adapt_delta=.99, 
-  max_depth=15
+  max_treedepth=15
 )
 
 # Extract posterior draws

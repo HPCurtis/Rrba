@@ -1,7 +1,6 @@
 library("cmdstanr")
 library("tidyverse")
 library("posterior")
-library("brms")
 
 options(mc.cores = parallel::detectCores())  # Use multiple cores
 
@@ -38,7 +37,8 @@ fit <- mod$sample(
   chains=4, 
   parallel_chains = 4,
   threads_per_chain = 2,
-  adapt_delta=.85
+  adapt_delta=.99, 
+  max_depth=15
 )
 
 # Extract posterior draws

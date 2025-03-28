@@ -28,7 +28,13 @@ data_list <- list(N = nrow(df), y = df$y, X = X, K = ncol(X), Kc = ncol(X) -1,
 # Fit model.
 fit <- mod$sample(
   data = data_list,
-  chains = 4
+  iter_warmup = 1000,                  
+  iter_sampling = 1000,
+  chains=4, 
+  parallel_chains = 4,
+  threads_per_chain = 2,
+  adapt_delta=.99, 
+  max_depth=15
 )
 
 fit$save_object(file = "RBA_posterior_draws.RDS")
